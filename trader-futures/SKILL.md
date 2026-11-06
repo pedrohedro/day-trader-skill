@@ -58,11 +58,12 @@ bars are left out.
 | `trader/futures-config.json` | optional, overrides the defaults below |
 | `trader/futures-analysis.json` | with `--write`: status, opening range, plan, replays, size, checks |
 
-Defaults (a Ylos 25K account; confirm them in the Ylos dashboard, rules differ
-by plan and by phase):
+Defaults (a Ylos 25K evaluation: US$ 1,500 max drawdown, US$ 1,500 target in
+30 days; other plans and phases differ, override them in the config):
 
 ```json
-{"account": "Ylos 25K", "max_contracts": 3, "drawdown_usd": 1200,
+{"account": "Ylos 25K", "max_contracts": 3, "drawdown_usd": 1500,
+ "profit_target_usd": 1500, "evaluation_days": 30,
  "max_loss_per_trade_usd": null, "daily_loss_usd": null, "min_reward_risk": 1.0,
  "no_entries_before": "09:45", "no_entries_after": "15:30", "flat_by": "15:55",
  "allow_short": true}

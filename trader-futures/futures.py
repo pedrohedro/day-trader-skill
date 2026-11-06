@@ -32,7 +32,9 @@ ROLL_DAYS = 8  # CME equity index roll: about 8 days before the third-Friday exp
 DEFAULTS = {
     "account": "Ylos 25K",
     "max_contracts": 3,
-    "drawdown_usd": 1200,          # confirm in the Ylos dashboard: rules differ by plan and phase
+    "drawdown_usd": 1500,          # Ylos 25K evaluation, as the account holder gave it
+    "profit_target_usd": 1500,     # to pass the evaluation
+    "evaluation_days": 30,
     "max_loss_per_trade_usd": None,  # None: 10 % of drawdown_usd, flagged as a default
     "daily_loss_usd": None,          # None: no daily limit checked (some Ylos plans have none)
     "min_reward_risk": 1.0,
@@ -315,6 +317,13 @@ def report(doc):
         out.append("RISK %s" % r["verdict"])
         for c in r["checks"]:
             out.append("  %-5s %-20s %s" % (c["result"], c["check"], c["why"]))
+    c = doc["config"]
+    if c.get("profit_target_usd") and doc.get("sizing"):
+        z = doc["sizing"]
+        out.append("Account %s: target US$ %.0f in %s days, max drawdown US$ %.0f. This trade at %d contract(s): "
+                   "US$ %.2f at the stop, US$ %.2f at the target (%.1f %% of the goal)."
+                   % (c.get("account"), c["profit_target_usd"], c.get("evaluation_days"), c.get("drawdown_usd") or 0,
+                      z["contracts"], z["risk_usd"], z["reward_usd"], 100.0 * z["reward_usd"] / c["profit_target_usd"]))
     out.append("Analysis only: no order was written or sent. A stop is a plan, not a guarantee. Not financial advice.")
     return "\n".join(out)
 

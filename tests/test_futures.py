@@ -96,8 +96,10 @@ class Pure(unittest.TestCase):
     def test_size_in_contracts(self):
         cfg = dict(fut.DEFAULTS)
         plan = {"risk_points": 25.0, "reward_points": 25.0}
-        z = fut.size(plan, fut.CONTRACTS["MNQ"], cfg)       # US$ 50 a contract, US$ 120 default max loss
-        self.assertEqual((z["contracts"], z["decided_by"], z["risk_usd"]), (2, "max_loss_per_trade", 100.0))
+        z = fut.size(plan, fut.CONTRACTS["MNQ"], cfg)       # US$ 50 a contract, US$ 150 default max loss
+        self.assertEqual((z["contracts"], z["decided_by"], z["risk_usd"]), (3, "max_contracts", 150.0))
+        z = fut.size({"risk_points": 30.0, "reward_points": 30.0}, fut.CONTRACTS["MNQ"], cfg)  # US$ 60 a contract
+        self.assertEqual((z["contracts"], z["decided_by"]), (2, "max_loss_per_trade"))
         self.assertTrue(z["max_loss_defaulted"])
         cfg["max_loss_per_trade_usd"] = 500
         z = fut.size(plan, fut.CONTRACTS["MNQ"], cfg)
