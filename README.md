@@ -152,6 +152,20 @@ for the 60 days to October 19 2026, the 10:15 AM opening-range scan, Yahoo's
 TSLA headlines that morning, the House Clerk's 2026 index, real PTR text and
 real XBRL facts. They reproduce every number in the example above.
 
+## Futures (MNQ), analysis only
+
+`/trader-futures` runs the pipeline for the Micro E-mini Nasdaq-100 (MNQ, front
+month such as MNQZ26) in one go: the opening-range breakout in both directions,
+stop and target on the 0.25 tick grid, the Time Machine's replays, a size in
+whole contracts at US$ 2 a point (3 at most by default) and PASS / BLOCK against a
+prop account's limits (`trader/futures-config.json`, Ylos 25K defaults). It never
+writes an order and never logs in anywhere.
+
+```bash
+python3 trader-futures/futures.py contract
+python3 trader-futures/futures.py analyze --write
+```
+
 ## Subagents
 
 `.claude/agents/` has one Claude Code subagent per skill (`trader-scanner-agent`
@@ -165,6 +179,7 @@ scanner-agent -> news-agent -> entry-agent -> exit-agent -> timemachine-agent
   -> budget-agent -> risk-agent -> broker-agent (tickets only)
   -> main conversation: your yes + Allow once -> broker MCP
 alerts-agent while the trade is open; analyst-agent / pelosi-agent on a schedule
+futures-agent: the same pipeline for a micro index future (MNQ), analysis only
 ```
 
 The broker subagent never runs `ticket.py approve`, `result` or `fill`, and never
