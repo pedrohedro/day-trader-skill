@@ -186,6 +186,7 @@ The broker subagent never runs `ticket.py approve`, `result` or `fill`, and neve
 calls a broker: the yes and the order stay in the main conversation. Install:
 
 ```bash
+mkdir -p ~/.claude/skills ~/.claude/agents
 cp -r trader-* ~/.claude/skills/ && cp .claude/agents/*.md ~/.claude/agents/
 ```
 

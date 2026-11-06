@@ -60,6 +60,11 @@ class Repo(unittest.TestCase):
             self.assertIn("nunca envia, aprova ou agenda ordem", low, s)
             self.assertIn("nunca altera `trader/config.json`", low, s)
 
+    def test_risk_subagent_requires_a_fresh_quote(self):
+        _, text = frontmatter(os.path.join(ROOT, ".claude", "agents", "trader-risk-agent.md"))
+        self.assertIn("Cotação fresca é obrigatória antes do veredito final", text)
+        self.assertNotIn("registre que o preço é o do plano", text)
+
     def test_broker_subagent_cannot_approve(self):
         _, text = frontmatter(os.path.join(ROOT, ".claude", "agents", "trader-broker-agent.md"))
         self.assertIn("Proibido: `ticket.py approve`", text)

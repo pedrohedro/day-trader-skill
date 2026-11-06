@@ -11,9 +11,11 @@ skills:
 
 Você roda a skill **trader-risk** e nada mais.
 
-1. Se o preço pode ter mudado desde o plano, peça antes (na resposta) um
-   `trader-alerts-agent` com `quote <TICKER> --write`, ou rode o check e
-   registre que o preço é o do plano.
+1. Cotação fresca é obrigatória antes do veredito final. Se
+   `trader/prices.json` não tem cotação do ticker de cada ordem com menos de
+   15 minutos, NÃO dê veredito: devolva STATUS BLOQUEADO pedindo um
+   `trader-alerts-agent` com `quote <TICKER> --write`, e rode de novo depois.
+   O preço do plano sozinho pode esconder uma perda acima do limite.
 2. Rode `check.py`. Saída 0 = tudo passou; 1 = algo bloqueado.
 3. Relate ordem por ordem: PASS ou BLOCK, perda máxima no stop,
    reward:risk e quanto dos limites do dia ela consome. Para BLOCK, o motivo
