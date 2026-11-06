@@ -39,8 +39,30 @@ class Repo(unittest.TestCase):
         self.assertEqual(found, sorted(SKILLS))
 
     def test_root_matches_the_reel(self):
-        root = sorted(d for d in os.listdir(ROOT) if not d.startswith(".git"))
-        self.assertEqual(root, sorted([".claude-plugin", "LICENSE", "README.md", "tests"] + SKILLS))
+        root = sorted(d for d in os.listdir(ROOT)
+                      if not d.startswith(".git") and d not in ("trader", "__pycache__"))  # runtime, gitignored
+        self.assertEqual(root, sorted([".claude", ".claude-plugin", "LICENSE", "README.md",
+                                       "tests"] + SKILLS))
+
+    def test_one_least_privilege_subagent_per_skill(self):
+        agents = os.path.join(ROOT, ".claude", "agents")
+        self.assertEqual(sorted(os.listdir(agents)), sorted(s + "-agent.md" for s in SKILLS))
+        for s in SKILLS:
+            fm, text = frontmatter(os.path.join(agents, s + "-agent.md"))
+            self.assertIn("name: %s-agent\n" % s, fm + "\n", s)
+            self.assertRegex(fm, r"description: ", s)
+            # preloads exactly its own skill
+            self.assertRegex(fm, r"skills:\n  - %s$" % re.escape(s), s)
+            # least privilege: no Write/Edit, no MCP (so no broker order tool), no Agent
+            tools = [t.strip() for t in re.search(r"^tools: (.+)$", fm, re.M).group(1).split(",")]
+            self.assertEqual(sorted(tools), ["Bash", "Glob", "Grep", "Read"], s)
+            low = text.lower()
+            self.assertIn("nunca envia, aprova ou agenda ordem", low, s)
+            self.assertIn("nunca altera `trader/config.json`", low, s)
+
+    def test_broker_subagent_cannot_approve(self):
+        _, text = frontmatter(os.path.join(ROOT, ".claude", "agents", "trader-broker-agent.md"))
+        self.assertIn("Proibido: `ticket.py approve`", text)
 
     def test_frontmatter_name_and_description(self):
         for s in SKILLS:

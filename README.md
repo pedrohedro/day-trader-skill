@@ -152,6 +152,31 @@ for the 60 days to October 19 2026, the 10:15 AM opening-range scan, Yahoo's
 TSLA headlines that morning, the House Clerk's 2026 index, real PTR text and
 real XBRL facts. They reproduce every number in the example above.
 
+## Subagents
+
+`.claude/agents/` has one Claude Code subagent per skill (`trader-scanner-agent`
+... `trader-pelosi-agent`). Each one preloads only its own skill (`skills:`),
+runs with only `Bash, Read, Glob, Grep` (no Write/Edit, no MCP, so no broker
+order tool), does one step and hands back. The main conversation runs the
+pipeline and keeps every user decision:
+
+```
+scanner-agent -> news-agent -> entry-agent -> exit-agent -> timemachine-agent
+  -> budget-agent -> risk-agent -> broker-agent (tickets only)
+  -> main conversation: your yes + Allow once -> broker MCP
+alerts-agent while the trade is open; analyst-agent / pelosi-agent on a schedule
+```
+
+The broker subagent never runs `ticket.py approve`, `result` or `fill`, and never
+calls a broker: the yes and the order stay in the main conversation. Install:
+
+```bash
+cp -r trader-* ~/.claude/skills/ && cp .claude/agents/*.md ~/.claude/agents/
+```
+
+Subagents load when a session starts. The `trader/` folder (config, state,
+orders) is in `.gitignore`: never commit it.
+
 ## Fine print
 
 **Not financial advice.** This is software that reads public data and does

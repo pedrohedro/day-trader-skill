@@ -1,0 +1,4 @@
+# Runtime state, prices, configs and orders: never commit them
+trader/
+__pycache__/
+*.pyc
