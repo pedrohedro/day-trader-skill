@@ -8,12 +8,12 @@ from _load import ROOT
 # v2, the day-trading pack: the eleven folders the reel's repo card shows
 SKILLS = ["trader-scanner", "trader-news", "trader-entry", "trader-exit", "trader-timemachine",
           "trader-risk", "trader-budget", "trader-broker", "trader-alerts", "trader-analyst",
-          "trader-pelosi"]
+          "trader-pelosi", "trader-futures"]
 ABOUT = ("11 Claude skills for day trading: scan thousands of charts, track breaking news, time every "
          "entry and exit, and replay every outcome before you risk a dollar.")
 # skills on the way to an order carry the safety block
 ORDER_PATH = ["trader-scanner", "trader-entry", "trader-exit", "trader-timemachine", "trader-budget",
-              "trader-pelosi", "trader-risk", "trader-broker", "trader-alerts"]
+              "trader-pelosi", "trader-risk", "trader-broker", "trader-alerts", "trader-futures"]
 V1_ONLY = ["trader-copycat", "trader-screener", "trader-tax", "trader-rebalance"]
 
 
@@ -33,14 +33,41 @@ def every_text_file():
 
 
 class Repo(unittest.TestCase):
-    def test_eleven_skill_folders_at_the_root(self):
+    def test_skill_folders_at_the_root(self):
         found = sorted(d for d in os.listdir(ROOT)
                        if os.path.isfile(os.path.join(ROOT, d, "SKILL.md")))
         self.assertEqual(found, sorted(SKILLS))
 
     def test_root_matches_the_reel(self):
-        root = sorted(d for d in os.listdir(ROOT) if not d.startswith(".git"))
-        self.assertEqual(root, sorted([".claude-plugin", "LICENSE", "README.md", "tests"] + SKILLS))
+        root = sorted(d for d in os.listdir(ROOT)
+                      if not d.startswith(".git") and d not in ("trader", "__pycache__"))  # runtime, gitignored
+        self.assertEqual(root, sorted([".claude", ".claude-plugin", "LICENSE", "README.md",
+                                       "tests"] + SKILLS))
+
+    def test_one_least_privilege_subagent_per_skill(self):
+        agents = os.path.join(ROOT, ".claude", "agents")
+        self.assertEqual(sorted(os.listdir(agents)), sorted(s + "-agent.md" for s in SKILLS))
+        for s in SKILLS:
+            fm, text = frontmatter(os.path.join(agents, s + "-agent.md"))
+            self.assertIn("name: %s-agent\n" % s, fm + "\n", s)
+            self.assertRegex(fm, r"description: ", s)
+            # preloads exactly its own skill
+            self.assertRegex(fm, r"skills:\n  - %s$" % re.escape(s), s)
+            # least privilege: no Write/Edit, no MCP (so no broker order tool), no Agent
+            tools = [t.strip() for t in re.search(r"^tools: (.+)$", fm, re.M).group(1).split(",")]
+            self.assertEqual(sorted(tools), ["Bash", "Glob", "Grep", "Read"], s)
+            low = text.lower()
+            self.assertIn("nunca envia, aprova ou agenda ordem", low, s)
+            self.assertIn("nunca altera `trader/config.json`", low, s)
+
+    def test_risk_subagent_requires_a_fresh_quote(self):
+        _, text = frontmatter(os.path.join(ROOT, ".claude", "agents", "trader-risk-agent.md"))
+        self.assertIn("Cotação fresca é obrigatória antes do veredito final", text)
+        self.assertNotIn("registre que o preço é o do plano", text)
+
+    def test_broker_subagent_cannot_approve(self):
+        _, text = frontmatter(os.path.join(ROOT, ".claude", "agents", "trader-broker-agent.md"))
+        self.assertIn("Proibido: `ticket.py approve`", text)
 
     def test_frontmatter_name_and_description(self):
         for s in SKILLS:
